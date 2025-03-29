@@ -1,10 +1,6 @@
 const axios = require('axios');
 const givingModel = require('../models/giving')
 const givingController  = {
-    index: (req, res) => {
-        res.render('index')
-    },
-
     giving: async (req, res, next) => {
         const {prime, amount, cardholder} = req.body;
         try {
