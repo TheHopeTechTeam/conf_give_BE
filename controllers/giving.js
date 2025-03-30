@@ -26,9 +26,9 @@ const givingController  = {
             const datetime = `${year}-${month}-${day}`;
             const externalResponse = response.data;
 
-            // givingModel.add(cardholder.name, amount, "TWD", datetime, phone_number, cardholder.email, cardholder.receipt, cardholder.paymentType, cardholder.upload, cardholder.receiptName, cardholder.nationalid, cardholder.company, cardholder.taxid, cardholder.note, (err) => {
-            //     if (err) return console.log(err)
-            // })
+            givingModel.add(cardholder.name, amount, "TWD", datetime, phone_number, cardholder.email, cardholder.receipt, cardholder.paymentType, cardholder.upload, cardholder.receiptName, cardholder.nationalid, cardholder.company, cardholder.taxid, cardholder.note, (err) => {
+                if (err) return console.log(err)
+            })
             res.status(200).json(externalResponse);
         } catch (error) {
             console.error('Error sending data to external API:', error);
