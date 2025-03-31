@@ -21,7 +21,7 @@ app.use(express.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 app.use(flash())
-  
+
 app.post('/api/payment', givingController.giving)
 
 module.exports = app;
