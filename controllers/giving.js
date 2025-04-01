@@ -13,6 +13,7 @@ const givingController = {
           merchant_id: process.env.merchant_id,
           amount: amount,
           cardholder: cardholder,
+          currency: "TWD",
           details: `${phone_number},${cardholder.email},${cardholder.receipt},${cardholder.paymentType},${cardholder.upload},${cardholder.receiptName},${cardholder.nationalid},${cardholder.company},${cardholder.taxid},${cardholder.note}`,
           remember: false,
         },
