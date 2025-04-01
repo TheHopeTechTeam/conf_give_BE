@@ -1,11 +1,11 @@
 const { Client } = require("pg");
 
-const { USER, PASSWORD, HOST, PGPORT, DATABASE } = process.env;
+const { PGUSER, PASSWORD, HOST, PGPORT, DATABASE } = process.env;
 
 console.log("process.env: ", USER, PASSWORD, HOST, PGPORT, DATABASE);
 
 const client = new Client({
-  user: USER,
+  user: PGUSER,
   password: PASSWORD,
   host: HOST,
   port: PGPORT, // PostgreSQL 的預設埠
