@@ -14,7 +14,7 @@ const givingController  = {
             }, {
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-api-key': process.env.merchant_id
+                    'x-api-key': process.env.partner_key
                 }
             });
     
