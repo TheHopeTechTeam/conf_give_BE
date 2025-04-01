@@ -9,8 +9,8 @@ const pool = new Pool({
   port: PGPORT,
   database: DATABASE,
   max: 50,
-  idleTimeoutMillis: 3000,
-  connectionTimeoutMillis: 2000,
+  idleTimeoutMillis: 10000,
+  connectionTimeoutMillis: 5000,
 });
 
 module.exports = pool;
