@@ -3,20 +3,17 @@ const givingModel = require("../models/giving");
 const givingController = {
   giving: async (req, res, next) => {
     const { prime, amount, cardholder } = req.body;
-    console.log("prime, amount, cardholde: ", prime, amount, cardholder);
-    console.log("process.env.partner_key: ", process.env.partner_key);
-    console.log("process.env.merchant_id: ", process.env.merchant_id);
 
     try {
       const response = await axios.post(
         "https://sandbox.tappaysdk.com/tpc/payment/pay-by-prime",
         {
-          // 替换为你要调用的外部API的URL
-          prime: req.body.prime,
+          prime: prime,
           partner_key: process.env.partner_key,
           merchant_id: process.env.merchant_id,
           amount: amount,
           cardholder: cardholder,
+          details: `${phone_number},${cardholder.email},${cardholder.receipt},${cardholder.paymentType},${cardholder.upload},${cardholder.receiptName},${cardholder.nationalid},${cardholder.company},${cardholder.taxid},${cardholder.note}`,
           remember: false,
         },
         {
