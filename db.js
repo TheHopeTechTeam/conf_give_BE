@@ -1,13 +1,15 @@
 const { Client } = require("pg");
 
-const { USER, PWD, HOST, PGPORT, DATABATE } = process.env;
+const { USER, PASSWORD, HOST, PGPORT, DATABASE } = process.env;
+
+console.log("process.env: ", process.env);
 
 const client = new Client({
   user: USER,
-  password: PWD,
+  password: PASSWORD,
   host: HOST,
   port: PGPORT, // PostgreSQL 的預設埠
-  database: DATABATE,
+  database: DATABASE,
 });
 
 module.exports = client;
