@@ -3,6 +3,7 @@ const givingModel = require("../models/giving");
 const givingController = {
   giving: async (req, res, next) => {
     const { prime, amount, cardholder } = req.body;
+    const phoneNumber = cardholder.phoneCode + cardholder.phone_number;
 
     try {
       const response = await axios.post(
@@ -14,7 +15,7 @@ const givingController = {
           amount: amount,
           cardholder: cardholder,
           currency: "TWD",
-          details: `${phone_number},${cardholder.email},${cardholder.receipt},${cardholder.paymentType},${cardholder.upload},${cardholder.receiptName},${cardholder.nationalid},${cardholder.company},${cardholder.taxid},${cardholder.note}`,
+          details: `${phoneNumber},${cardholder.email},${cardholder.receipt},${cardholder.paymentType},${cardholder.upload},${cardholder.receiptName},${cardholder.nationalid},${cardholder.company},${cardholder.taxid},${cardholder.note}`,
           remember: false,
         },
         {
@@ -31,7 +32,6 @@ const givingController = {
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, "0"); // 月份是從0開始的，所以要加1
       const day = String(date.getDate()).padStart(2, "0");
-      const phone_number = cardholder.phoneCode + cardholder.phone_number;
       const datetime = `${year}-${month}-${day}`;
       const externalResponse = response.data;
 
@@ -40,7 +40,7 @@ const givingController = {
         amount,
         "TWD",
         datetime,
-        phone_number,
+        phoneNumber,
         cardholder.email,
         cardholder.receipt,
         cardholder.paymentType,
