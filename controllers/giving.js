@@ -2,6 +2,11 @@ const axios = require("axios");
 const givingModel = require("../models/giving");
 
 const { PARTNER_KEY, MERCHANT_ID, TAPPAY_API, CURRENCY } = process.env;
+if (!PARTNER_KEY || !MERCHANT_ID || !TAPPAY_API || !CURRENCY) {
+  throw new Error(
+    "Missing required environment variables for TapPay integration"
+  );
+}
 
 function generateDetails(phoneNumber, cardholder) {
   const id = cardholder.nationalid ?? cardholder.taxid ?? "";
@@ -11,27 +16,35 @@ function generateDetails(phoneNumber, cardholder) {
 }
 
 async function tapPayPayment(phoneNumber, prime, amount, cardholder) {
-  const response = await axios.post(
-    TAPPAY_API,
-    {
-      prime,
-      partner_key: PARTNER_KEY,
-      merchant_id: MERCHANT_ID,
-      amount: amount,
-      cardholder,
-      currency: CURRENCY,
-      details: generateDetails(phoneNumber, cardholder),
-      remember: false,
-    },
-    {
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": PARTNER_KEY,
+  try {
+    const response = await axios.post(
+      TAPPAY_API,
+      {
+        prime,
+        partner_key: PARTNER_KEY,
+        merchant_id: MERCHANT_ID,
+        amount: amount,
+        cardholder,
+        currency: CURRENCY,
+        details: generateDetails(phoneNumber, cardholder),
+        remember: false,
       },
-    }
-  );
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": PARTNER_KEY,
+        },
+      }
+    );
 
-  return response.data;
+    return response.data;
+  } catch (err) {
+    console.error(
+      "Error calling TapPay API:",
+      err.response?.data || err.message
+    );
+    throw new Error("TapPay payment request failed");
+  }
 }
 
 function getCurrentDate() {
