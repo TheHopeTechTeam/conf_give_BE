@@ -56,7 +56,7 @@ const givingController = {
       });
     }
 
-    const phoneNumber = `${phoneCode || ""}${phone_number || ""}`;
+    const phoneNumber = phoneCode + phone_number;
 
     try {
       const externalResponse = await tapPayPayment(
