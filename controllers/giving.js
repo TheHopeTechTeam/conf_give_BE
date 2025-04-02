@@ -1,61 +1,98 @@
 const axios = require("axios");
 const givingModel = require("../models/giving");
+
+const { PARTNER_KEY, MERCHANT_ID, TAPPAY_API, CURRENCY } = process.env;
+
+function generateDetails(phoneNumber, cardholder) {
+  const id = cardholder.nationalid ?? cardholder.taxid ?? "";
+  const note = cardholder.note || "";
+
+  return `${phoneNumber},${id},${note}`;
+}
+
+async function tapPayPayment(phoneNumber, prime, amount, cardholder) {
+  const response = await axios.post(
+    TAPPAY_API,
+    {
+      prime,
+      partner_key: PARTNER_KEY,
+      merchant_id: MERCHANT_ID,
+      amount: amount,
+      cardholder,
+      currency: CURRENCY,
+      details: generateDetails(phoneNumber, cardholder),
+      remember: false,
+    },
+    {
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": PARTNER_KEY,
+      },
+    }
+  );
+
+  return response.data;
+}
+
+function getCurrentDate() {
+  const date = new Date();
+  return date.toISOString().split("T")[0]; // YYYY-MM-DD
+}
+
 const givingController = {
   giving: async (req, res, next) => {
     const { prime, amount, cardholder } = req.body;
-    const phoneNumber = cardholder.phoneCode + cardholder.phone_number;
+    const { phoneCode, phone_number } = cardholder;
+
+    if (!prime || !amount || !cardholder) {
+      return res.status(400).json({
+        error: "Missing required fields: prime, amount, or cardholder",
+      });
+    }
+
+    if (!phoneCode || !phone_number) {
+      return res.status(400).json({
+        error: "Missing required fields: phoneCode, or phone_number",
+      });
+    }
+
+    const phoneNumber = phoneCode + phone_number;
 
     try {
-      const response = await axios.post(
-        "https://sandbox.tappaysdk.com/tpc/payment/pay-by-prime",
-        {
-          prime: prime,
-          partner_key: process.env.partner_key,
-          merchant_id: process.env.merchant_id,
-          amount: amount,
-          cardholder: cardholder,
-          currency: "TWD",
-          details: `${phoneNumber},${cardholder.email},${cardholder.receipt},${cardholder.paymentType},${cardholder.upload},${cardholder.receiptName},${cardholder.nationalid},${cardholder.company},${cardholder.taxid},${cardholder.note}`,
-          remember: false,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "x-api-key": process.env.partner_key,
-          },
-        }
+      const externalResponse = await tapPayPayment(
+        phoneNumber,
+        prime,
+        amount,
+        cardholder
       );
 
-      const date = new Date();
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0"); // 月份是從0開始的，所以要加1
-      const day = String(date.getDate()).padStart(2, "0");
-      const datetime = `${year}-${month}-${day}`;
-      const externalResponse = response.data;
-
-      givingModel.add(
+      await givingModel.add(
         cardholder.name,
         amount,
         "TWD",
-        datetime,
+        getCurrentDate(),
         phoneNumber,
-        cardholder.email,
-        cardholder.receipt,
-        cardholder.paymentType,
-        cardholder.upload,
-        cardholder.receiptName,
-        cardholder.nationalid,
-        cardholder.company,
-        cardholder.taxid,
-        cardholder.note,
-        (err) => {
-          if (err) return console.log(err);
-        }
+        cardholder.email || "",
+        cardholder.receipt || "",
+        cardholder.paymentType || "",
+        cardholder.upload || "",
+        cardholder.receiptName || "",
+        cardholder.nationalid || "",
+        cardholder.company || "",
+        cardholder.taxid || "",
+        cardholder.note || ""
       );
+
       res.status(200).json(externalResponse);
     } catch (error) {
-      console.error("Error sending data to external API:", error);
-      res.status(500).json({ error: "Failed to send data to external API" });
+      console.error(
+        "Error sending data to TapPay API or storing giving details in DB:",
+        error
+      );
+      res.status(500).json({
+        error:
+          "Failed to send data to TapPay API or storing giving details in DB",
+      });
     }
   },
 };

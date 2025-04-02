@@ -15,8 +15,7 @@ const givingModel = {
     nationalid,
     company,
     taxid,
-    note,
-    cb
+    note
   ) => {
     try {
       await pool.query(
@@ -38,11 +37,10 @@ const givingModel = {
           note,
         ]
       );
-      cb(null);
-      console.log("Data insert success");
+      console.log("Data inserted with success");
     } catch (err) {
-      console.error("Error executing query:", err);
-      cb(err);
+      console.error("Error executing query in givingModel.add:", err);
+      throw err;
     }
   },
 };
