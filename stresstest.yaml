@@ -1,6 +1,6 @@
 config:
-  # target: "https://confgive.thehope.app"
-  target: "http://localhost:3000"
+  target: "https://confgive.thehope.app"
+  # target: "http://localhost:3000"
   phases:
     # test for 2 mins, 30 req/sec, slowly build to 50 req/sec
     # - duration: 120
@@ -18,7 +18,7 @@ scenarios:
           url: "/api/payment"
           json:
             prime: "test_3a2fb2b7e892b914a03c95dd4dd5dc7970c908df67a49527c0a648b2bc9"
-            amount: 500
+            amount: 1
             cardholder:
               name: "John Doe"
               email: "johndoe@example.com"
