@@ -1,0 +1,34 @@
+config:
+  target: "https://confgive.thehope.app"
+  # target: "http://localhost:3000"
+  phases:
+    # test for 2 mins, 30 req/sec, slowly build to 50 req/sec
+    # - duration: 120
+    #   arrivalRate: 30
+    #   rampTo: 50
+    # 10 secs 800 request for extreme scenario test
+    - duration: 10
+      arrivalCount: 800
+  defaults:
+    headers:
+      Content-Type: "application/json"
+scenarios:
+  - flow:
+      - post:
+          url: "/api/payment"
+          json:
+            prime: "test_3a2fb2b7e892b914a03c95dd4dd5dc7970c908df67a49527c0a648b2bc9"
+            amount: 500
+            cardholder:
+              name: "John Doe"
+              email: "johndoe@example.com"
+              phoneCode: "+886"
+              phone_number: "912345678"
+              receipt: true
+              paymentType: "credit_card"
+              upload: "yes"
+              receiptName: "John Doe"
+              nationalid: "A123456789"
+              company: "Example Corp"
+              taxid: "12345678"
+              note: "test"
