@@ -1,14 +1,14 @@
 config:
-  target: "https://confgive.thehope.app"
-  # target: "http://localhost:3000"
+  # target: "https://confgive.thehope.app"
+  target: "http://localhost:3000"
   phases:
     # test for 2 mins, 30 req/sec, slowly build to 50 req/sec
     # - duration: 120
     #   arrivalRate: 30
     #   rampTo: 50
     # 10 secs 800 request for extreme scenario test
-    - duration: 10
-      arrivalCount: 800
+    - duration: 2
+      arrivalCount: 500
   defaults:
     headers:
       Content-Type: "application/json"

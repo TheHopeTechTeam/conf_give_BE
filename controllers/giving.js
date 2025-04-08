@@ -1,11 +1,18 @@
 const axios = require("axios");
 const givingModel = require("../models/giving");
 
-const { PARTNER_KEY, MERCHANT_ID, TAPPAY_API, CURRENCY, REDIS_URL } =
+const { PARTNER_KEY, MERCHANT_ID, TAPPAY_API, CURRENCY, REDIS_URL, WORKERS } =
   process.env;
-if (!PARTNER_KEY || !MERCHANT_ID || !TAPPAY_API || !CURRENCY || !REDIS_URL) {
+if (
+  !PARTNER_KEY ||
+  !MERCHANT_ID ||
+  !TAPPAY_API ||
+  !CURRENCY ||
+  !REDIS_URL ||
+  !WORKERS
+) {
   throw new Error(
-    "Missing required environment variables (PARTNER_KEY, MERCHANT_ID, TAPPAY_API, CURRENCY, REDIS_URL)"
+    "Missing required environment variables (PARTNER_KEY, MERCHANT_ID, TAPPAY_API, CURRENCY, REDIS_URL, WORKERS)"
   );
 }
 
@@ -69,56 +76,57 @@ function getCurrentDate() {
   return date.toISOString().split("T")[0]; // YYYY-MM-DD
 }
 
-// Worker to process TapPay payment jobs
-const paymentWorker = new Worker(
-  "tappay-payments",
-  async (job) => {
-    const { phoneNumber, prime, amount, cardholder, givingData } = job.data; // Extract all data
-    try {
-      const externalResponse = await tapPayPayment(
-        phoneNumber,
-        prime,
-        amount,
-        cardholder
-      );
-      // Include the externalResponse in the givingData to be saved.
-      await givingModel.add(
-        givingData.name,
-        givingData.amount,
-        givingData.currency,
-        givingData.date,
-        givingData.phoneNumber,
-        givingData.email,
-        givingData.receipt,
-        givingData.paymentType,
-        givingData.upload,
-        givingData.receiptName,
-        givingData.nationalid,
-        givingData.company,
-        givingData.taxid,
-        givingData.note
-      );
-      return { success: true, response: externalResponse }; // Return useful data
-    } catch (error) {
-      // IMPORTANT:  Re-throw the error.  This tells BullMQ the job failed.
-      console.error("Payment processing failed in worker:", error);
-      throw error;
-    }
-  },
-  { connection: REDIS_URL }
-);
+// Worker processing function (shared by all workers)
+const paymentWorkerProcessor = async (job) => {
+  const { givingData } = job.data; // Destructure jobId
+  try {
+    await givingModel.add(
+      givingData.name,
+      givingData.amount,
+      givingData.currency,
+      givingData.date,
+      givingData.phoneNumber,
+      givingData.email,
+      givingData.receipt,
+      givingData.paymentType,
+      givingData.upload,
+      givingData.receiptName,
+      givingData.nationalid,
+      givingData.company,
+      givingData.taxid,
+      givingData.note
+    );
 
-paymentWorker.on("completed", (job, result) => {
-  console.log(`Job ${job.id} completed.`);
-});
+    return { success: true }; // Return the response
+  } catch (error) {
+    console.error("Payment processing failed in worker:", error);
+    throw error;
+  }
+};
 
-paymentWorker.on("failed", (job, err) => {
-  console.error(`Job ${job.id} failed with error:`, err);
-});
+// Create multiple workers
+const numberOfWorkers = 5;
+for (let i = 0; i < numberOfWorkers; i++) {
+  const worker = new Worker("tappay-payments", paymentWorkerProcessor, {
+    // Store the worker instance
+    connection: REDIS_URL,
+    concurrency: 1,
+  });
 
-paymentWorker.on("progress", (job, progress) => {
-  console.log(`Job ${job.id} progress: ${progress}`);
-});
+  worker.on("completed", (job, result) => {
+    console.log(`Job ${job.id} completed.`);
+    //  The result is already stored in redis, so nothing to do here.
+  });
+
+  worker.on("failed", (job, err) => {
+    console.error(`Job ${job.id} failed with error:`, err);
+    // The error is already stored in redis, so nothing to do here.
+  });
+
+  worker.on("progress", (job, progress) => {
+    console.log(`Job ${job.id} progress: ${progress}`);
+  });
+}
 
 const givingController = {
   giving: async (req, res, next) => {
@@ -157,14 +165,20 @@ const givingController = {
     };
 
     try {
-      // Add a job to the queue, *not* the payment itself.
+      const externalResponse = await tapPayPayment(
+        phoneNumber,
+        prime,
+        amount,
+        cardholder
+      );
+
+      // Tappay success then respond 200
+      res.status(200).json(externalResponse);
+
+      // Add a job to the queue to store into DB
       const job = await paymentQueue.add(
         "process-payment",
         {
-          phoneNumber,
-          prime,
-          amount,
-          cardholder,
           givingData,
         },
         {
@@ -173,10 +187,6 @@ const givingController = {
       );
 
       console.log(`Job ${job.id} added to queue for processing.`);
-      // Respond immediately, indicating the payment is being processed.
-      res.status(202).json({
-        message: "Payment processing initiated.  Check back later for status.",
-      }); // 202 Accepted
     } catch (error) {
       console.error("Error adding job to payment queue:", error);
       res
