@@ -175,6 +175,9 @@ const givingController = {
       // Tappay success then respond 200
       res.status(200).json(externalResponse);
 
+      // Add rec_trade_id to the data store into DB 
+      givingData.note = externalResponse.rec_trade_id;
+
       // Add a job to the queue to store into DB
       const job = await paymentQueue.add(
         "process-payment",
