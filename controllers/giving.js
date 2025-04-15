@@ -175,7 +175,13 @@ const givingController = {
       // Tappay success then respond 200
       res.status(200).json(externalResponse);
 
-      // Add rec_trade_id to the data store into DB 
+      if (externalResponse.status !== 0) {
+        // If the status is not successful, do not store the record in DB
+        console.log("giving without success");
+        return;
+      }
+
+      // Add rec_trade_id to the data store into DB
       givingData.note = externalResponse.rec_trade_id;
 
       // Add a job to the queue to store into DB

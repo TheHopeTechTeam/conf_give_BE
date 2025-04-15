@@ -7,8 +7,8 @@ config:
     #   arrivalRate: 30
     #   rampTo: 50
     # 10 secs 800 request for extreme scenario test
-    - duration: 2
-      arrivalCount: 500
+    - duration: 10
+      arrivalCount: 800
   defaults:
     headers:
       Content-Type: "application/json"
