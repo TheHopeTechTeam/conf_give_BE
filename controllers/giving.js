@@ -94,7 +94,8 @@ const paymentWorkerProcessor = async (job) => {
       givingData.nationalid,
       givingData.company,
       givingData.taxid,
-      givingData.note
+      givingData.note,
+      givingData.tpTradeID
     );
 
     return { success: true }; // Return the response
@@ -182,7 +183,7 @@ const givingController = {
       }
 
       // Add rec_trade_id to the data store into DB
-      givingData.note = externalResponse.rec_trade_id;
+      givingData.tpTradeID = externalResponse.rec_trade_id;
 
       // Add a job to the queue to store into DB
       const job = await paymentQueue.add(
