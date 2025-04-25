@@ -45,6 +45,15 @@ const givingModel = {
       throw err;
     }
   },
+  get: async () => {
+    try {
+      const res = await pool.query("SELECT * FROM confgive ORDER BY id");
+      return res.rows;
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
+  },
 };
 
 module.exports = givingModel;

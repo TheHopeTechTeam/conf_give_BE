@@ -1,15 +1,24 @@
 const axios = require("axios");
 const givingModel = require("../models/giving");
 
-const { PARTNER_KEY, MERCHANT_ID, TAPPAY_API, CURRENCY, REDIS_URL, WORKERS } =
-  process.env;
+const {
+  PARTNER_KEY,
+  MERCHANT_ID,
+  TAPPAY_API,
+  CURRENCY,
+  REDIS_URL,
+  WORKERS,
+  GOOGLE_SECRET,
+} = process.env;
+
 if (
   !PARTNER_KEY ||
   !MERCHANT_ID ||
   !TAPPAY_API ||
   !CURRENCY ||
   !REDIS_URL ||
-  !WORKERS
+  !WORKERS ||
+  !GOOGLE_SECRET
 ) {
   throw new Error(
     "Missing required environment variables (PARTNER_KEY, MERCHANT_ID, TAPPAY_API, CURRENCY, REDIS_URL, WORKERS)"
@@ -202,6 +211,27 @@ const givingController = {
       res
         .status(500)
         .json({ error: "Failed to add payment to processing queue." });
+    }
+  },
+  get: async (req, res, next) => {
+    const { googleSecret } = req.body;
+    if (!googleSecret) {
+      return res.status(400).json({
+        error: "Missing secret",
+      });
+    }
+
+    if (googleSecret !== GOOGLE_SECRET) {
+      return res.status(400).json({
+        error: "Missing secret",
+      });
+    }
+
+    try {
+      const result = await givingModel.get();
+      res.send({ data: result });
+    } catch (e) {
+      return res.status(500).json({ error: "Failed to get giving all data." });
     }
   },
 };

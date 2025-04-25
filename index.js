@@ -29,6 +29,7 @@ app.use(express.json());
 app.use(flash());
 
 app.post("/api/payment", givingController.giving);
+app.post("/api/getall", givingController.get);
 
 app.listen(PORT, () => {
   console.log("server listening on port: ", PORT);
