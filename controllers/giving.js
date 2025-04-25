@@ -214,7 +214,7 @@ const givingController = {
     }
   },
   get: async (req, res, next) => {
-    const { googleSecret } = req.body;
+    const { googleSecret, lastRowID } = req.body;
     if (!googleSecret) {
       return res.status(400).json({
         error: "Missing secret",
@@ -228,7 +228,7 @@ const givingController = {
     }
 
     try {
-      const result = await givingModel.get();
+      const result = await givingModel.get(lastRowID);
       res.send({ data: result });
     } catch (e) {
       return res.status(500).json({ error: "Failed to get giving all data." });

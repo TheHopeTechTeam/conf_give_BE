@@ -45,9 +45,12 @@ const givingModel = {
       throw err;
     }
   },
-  get: async () => {
+  get: async (lastRowID) => {
     try {
-      const res = await pool.query("SELECT * FROM confgive ORDER BY id");
+      const res = await pool.query(
+        "SELECT * FROM confgive WHERE id > $1 ORDER BY id",
+        [lastRowID]
+      );
       return res.rows;
     } catch (e) {
       console.log(e);
